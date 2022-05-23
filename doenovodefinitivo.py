@@ -7,11 +7,13 @@ Original file is located at
     https://colab.research.google.com/drive/1rxKVNIYpgH5dYxU2IwRRSNJOV0IY8h6u
 """
 
+#instalações somente necessarias para o google colab
 !apt update
 !apt install chromium-chromedriver
 !pip install selenium
 !pip install pdfminer
 
+#importações, pdf miner, selenium, email
 import email, smtplib, ssl
 import os
 import glob
@@ -30,7 +32,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-#DEF do leitor de PDF
+#DEF do leitor de PDF e retorna uma string com todo o texto do PDF
 def get_pdf_file_content(path_to_pdf):
   resource_manager = PDFResourceManager(caching=True)
   out_text = StringIO()
@@ -47,6 +49,8 @@ def get_pdf_file_content(path_to_pdf):
   out_text.close()
   return text.upper()
 
+#Definição que procura a palavra chave, em um texto (retorno da função anterior)
+#Deve ser alimentada na função, a variavel que armazena a string do PDF, e uma lista contendo as palavras chaves
 def procurar_palavras(texto, lista):
   for each in lista:
     indices_object = re.finditer(pattern=each, string=texto)
@@ -60,6 +64,8 @@ def procurar_palavras(texto, lista):
       extrato.write('<br>')
   extrato.close()
 
+#Função que envia o email, deve ser alimentada com email do emissor, receptor, assunto da mensagem, senha a mensagem é o arquivo gerado pela função anterior
+#armazenado pela função OPEN numa variavel
 def enviar_email(emissor, receptor, assunto, senha, mensagem):
 
   # Create a multipart message and set headers
@@ -125,34 +131,31 @@ try:
 except:
     pass
 
+#Obtenção do dois ultimos DOES atraves do selenium, por simples click no XPATH para download
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument("--window-size=1920,1080")
 wd = webdriver.Chrome(options=options)
-wd.get("https://doe.sea.sc.gov.br/")
+wd.get("https://doe.sea.sc.gov.br/") # informar a pagina de destino
+#click em cada elemento para download
 wd.find_element(by=By.XPATH, value="/html/body/div[1]/div/div/section[3]/div/div/div[2]/div/div/div[1]/div/div/div[1]/div/div/div[2]/a").click()
 wd.find_element(by=By.XPATH, value="/html/body/div[1]/div/div/section[3]/div/div/div[2]/div/div/div[1]/div/div/div[2]/div/div/div[2]/a").click()
-#renomeando os dois arquivos PDF
+#armazenando os dos arquivos em uma lista
 time.sleep(20)
 arquivos = []
 arquivos = glob.glob("*.pdf")
 
-search_keywords=["PPP",
-                 " PPI ",
-                 "DIDE",
-                 "NUPROJ",
-                 "GARANTIDOR",
-                 "PORTARIA Nº [+-]?\d+(?:\.\d+)?/SEF ",
-                 "GEPAC",
-                 "GEADE",
-                 "CAPMI",
-                 " PMI "]
+#definindo as palavras chaves a serem procuradas
+search_keywords=['',
+                 ]
+#definindo parametros de email
 sender_email = ""
 receiver_email = ""
 password = ""
 
+#chamando as funlções para cada arquivo
 for each in arquivos:
   subject = (f'Verificação DOE: {each}')
   path_to_pdf = each
